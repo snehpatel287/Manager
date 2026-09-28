@@ -5,9 +5,9 @@
 // Swap bodies for Mongoose, e.g. `Project.find().lean()`.
 
 import type { Project, ProjectInput, ProjectWithStats } from '@/lib/types';
-import { db } from './store';
+import { mutate, readDb, type Store } from './store';
 
-function withStats(project: Project): ProjectWithStats {
+function withStats(db: Store, project: Project): ProjectWithStats {
   const list = db.entries.filter((e) => e.projectSlug === project.slug);
   return {
     ...project,
@@ -20,12 +20,14 @@ function withStats(project: Project): ProjectWithStats {
 }
 
 export async function getProjects(): Promise<ProjectWithStats[]> {
-  return structuredClone(db.projects.map(withStats));
+  const db = await readDb();
+  return db.projects.map((p) => withStats(db, p));
 }
 
 export async function getProject(projectSlug: string): Promise<ProjectWithStats | null> {
+  const db = await readDb();
   const project = db.projects.find((p) => p.slug === projectSlug);
-  return project ? structuredClone(withStats(project)) : null;
+  return project ? withStats(db, project) : null;
 }
 
 function slugify(text: string): string {
@@ -39,7 +41,7 @@ function slugify(text: string): string {
 }
 
 /** Returns `base`, or `base-2`, `base-3`, … if already taken. */
-function uniqueSlug(base: string): string {
+function uniqueSlug(db: Store, base: string): string {
   const taken = new Set(db.projects.map((p) => p.slug));
   let slug = base;
   for (let i = 2; taken.has(slug); i++) slug = `${base}-${i}`;
@@ -47,12 +49,14 @@ function uniqueSlug(base: string): string {
 }
 
 export async function createProject(data: ProjectInput): Promise<ProjectWithStats> {
-  const project: Project = {
-    id: `p${Date.now()}`,
-    slug: uniqueSlug(slugify(data.title)),
-    title: data.title,
-    description: data.description,
-  };
-  db.projects.push(project);
-  return structuredClone(withStats(project));
+  return mutate((db) => {
+    const project: Project = {
+      id: `p${Date.now()}`,
+      slug: uniqueSlug(db, slugify(data.title)),
+      title: data.title,
+      description: data.description,
+    };
+    db.projects.push(project);
+    return withStats(db, project);
+  });
 }

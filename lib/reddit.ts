@@ -168,6 +168,7 @@ export async function checkRedditPosts(urls: string[]): Promise<RedditCheckResul
   }
 
   return ids.map((id, i) => {
+    if (!urls[i]?.trim()) return { status: null, reason: 'No post URL' };
     if (!id) {
       return {
         status: null,

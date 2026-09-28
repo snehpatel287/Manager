@@ -1,6 +1,6 @@
 # Manager
 
-A personal Next.js (App Router) + TypeScript + Tailwind CSS app for managing project entries such as Reddit posts. It runs on static mock data for now and is set up so MongoDB can be added later.
+A personal Next.js (App Router) + TypeScript + Tailwind CSS app for managing project entries such as Reddit posts. For now it saves data to a local JSON file (`data/db.json`, created from the sample data on first run). It's set up so MongoDB can be added later.
 
 ```bash
 npm install
@@ -27,7 +27,7 @@ Checks look at posts the way a logged-out visitor sees them, so posts removed qu
 | `/`                       | Project cards with stats + "Add Project"   |
 | `/:projectSlug`           | Entries table + "Add New Entry"            |
 | `/:projectSlug/new`       | Add-entry form                             |
-| `/:projectSlug/:entryId`  | Entry details: copy fields, Copy All, Edit, Delete |
+| `/:projectSlug/:postNo`   | Entry details (e.g. `/reddit-posts/1` = Post #1): copy fields, Copy All, Edit, Delete |
 
 ## Structure
 
@@ -41,7 +41,7 @@ hooks/useCopy.ts      Clipboard + "Copied!" state
 lib/types.ts          Project / Entry types (future Mongoose model shape)
 lib/data/
   mockData.ts         Seed data (shaped like `projects` and `entries` collections)
-  store.ts            In-memory store (resets on server restart)
+  store.ts            JSON-file store at data/db.json (survives restarts)
   projects.ts         Project repository  ← swap for Mongoose
   entries.ts          Entry repository    ← swap for Mongoose
 lib/reddit.ts         Reddit API status checker (server-only)
@@ -50,9 +50,13 @@ lib/utils/            Formatting, clipboard, cn() helpers
 
 Data flow: **pages / Server Actions → `lib/data/*` repositories → store**. The UI only talks to the repositories, so these are the only files that change.
 
+## Resetting data
+
+Delete `data/db.json` to go back to the sample data. The file isn't committed to git.
+
 ## Adding MongoDB later
 
 1. `npm install mongoose`, then add `MONGODB_URI` to `.env.local`.
 2. Add `lib/db.ts` (a cached connection) and `models/Project.ts` and `models/Entry.ts`, typed from `lib/types.ts`.
-3. Replace the function bodies in `lib/data/projects.ts` and `lib/data/entries.ts` with Mongoose queries. Each function is commented with the REST endpoint it matches. Delete `store.ts`.
+3. Replace the function bodies in `lib/data/projects.ts` and `lib/data/entries.ts` with Mongoose queries. Each function is commented with the REST endpoint it matches. Delete `store.ts` (and optionally import `data/db.json` into Mongo).
 4. Optional: to get the REST API (`GET /api/projects`, `PUT /api/entries/:entryId`, and so on), add route handlers under `app/api/...` that call the same repository functions.

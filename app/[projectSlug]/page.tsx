@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import CheckStatusButton from '@/components/CheckStatusButton';
-import EntriesTable from '@/components/EntriesTable';
+import EntriesView from '@/components/EntriesView';
 import Icon from '@/components/Icon';
 import PageHeader from '@/components/PageHeader';
 import { EmptyState } from '@/components/States';
@@ -50,7 +50,7 @@ export default async function ProjectPage({ params }: Props) {
       {entries.length === 0 ? (
         <EmptyState title="No entries yet" message="Add your first entry to start tracking." action={addButton} />
       ) : (
-        <EntriesTable projectSlug={projectSlug} entries={entries} />
+        <EntriesView projectSlug={projectSlug} entries={entries} />
       )}
     </>
   );

@@ -1,5 +1,13 @@
 import type { EntryEditableFields } from '@/lib/types';
 
+/** YYYY-MM-DD in local time, `daysAgo` days before today. */
+export function localDate(daysAgo = 0): string {
+  const d = new Date();
+  d.setDate(d.getDate() - daysAgo);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
 export function formatDate(value: string): string {
   if (!value) return '—';
   // Parse YYYY-MM-DD as a local date to avoid timezone shifts. Fixed locale
@@ -8,6 +16,11 @@ export function formatDate(value: string): string {
   const date = new Date(y, m - 1, d);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+/** "u/name", or an em dash when empty. */
+export function formatUsername(username: string): string {
+  return username ? `u/${username}` : '—';
 }
 
 export function formatEntryForCopy({ subreddit, title, description }: EntryEditableFields): string {

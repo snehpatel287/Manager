@@ -3,6 +3,7 @@
 import { useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
 import type { EntryInput } from '@/lib/types';
 import { cn } from '@/lib/utils/cn';
+import { localDate } from '@/lib/utils/format';
 import FieldLabel from './ui/FieldLabel';
 import { buttonStyles } from './ui/button';
 import { inputStyles } from './ui/input';
@@ -20,6 +21,11 @@ export const EMPTY_ENTRY: EntryInput = {
 };
 
 const ALL_FIELDS = Object.keys(EMPTY_ENTRY) as FieldName[];
+
+const DATE_SHORTCUTS = [
+  { label: 'Today', daysAgo: 0 },
+  { label: 'Yesterday', daysAgo: 1 },
+];
 
 interface EntryFormProps<K extends FieldName> {
   initialValues?: Partial<EntryInput>;
@@ -57,7 +63,7 @@ export default function EntryForm<K extends FieldName = FieldName>({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {show('postUrl') && (
           <Field label="Post URL" wide>
-            <input name="postUrl" type="url" required placeholder="https://reddit.com/r/…" value={values.postUrl} onChange={set} className={inputStyles} />
+            <input name="postUrl" type="url" placeholder="https://reddit.com/r/…" value={values.postUrl} onChange={set} className={inputStyles} />
           </Field>
         )}
         {show('status') && (
@@ -70,22 +76,45 @@ export default function EntryForm<K extends FieldName = FieldName>({
         )}
         {show('redditUsername') && (
           <Field label="Reddit Username">
-            <input name="redditUsername" required placeholder="username" value={values.redditUsername} onChange={set} className={inputStyles} />
+            <input name="redditUsername" placeholder="username" value={values.redditUsername} onChange={set} className={inputStyles} />
           </Field>
         )}
         {show('date') && (
           <Field label="Date">
-            <input name="date" type="date" value={values.date} onChange={set} className={inputStyles} />
+            <div className="flex gap-2">
+              <input name="date" type="date" value={values.date} onChange={set} className={cn(inputStyles, 'min-w-0 flex-1')} />
+              {DATE_SHORTCUTS.map(({ label, daysAgo }) => {
+                const value = localDate(daysAgo);
+                return (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => setValues((v) => ({ ...v, date: value }))}
+                    aria-pressed={values.date === value}
+                    className={buttonStyles({
+                      variant: 'secondary',
+                      className: cn(
+                        'h-auto shrink-0 px-3',
+                        values.date === value &&
+                          'border-indigo-500 bg-indigo-50 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-950 dark:text-indigo-300 dark:hover:bg-indigo-950',
+                      ),
+                    })}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
           </Field>
         )}
         {show('subreddit') && (
           <Field label="Subreddit" wide>
-            <input name="subreddit" required placeholder="r/webdev" value={values.subreddit} onChange={set} className={inputStyles} />
+            <input name="subreddit" placeholder="r/webdev" value={values.subreddit} onChange={set} className={inputStyles} />
           </Field>
         )}
         {show('title') && (
           <Field label="Title" wide>
-            <input name="title" required value={values.title} onChange={set} className={inputStyles} />
+            <input name="title" value={values.title} onChange={set} className={inputStyles} />
           </Field>
         )}
         {show('description') && (

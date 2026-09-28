@@ -1,69 +1,80 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { deleteEntryAction, updateEntryAction } from '@/app/actions';
+import { updateEntryAction } from '@/app/actions';
 import { useCopy } from '@/hooks/useCopy';
 import type { Entry, EntryEditableFields } from '@/lib/types';
 import { cn } from '@/lib/utils/cn';
 import { formatEntryForCopy } from '@/lib/utils/format';
-import ConfirmDialog from './ConfirmDialog';
-import DetailField from './DetailField';
-import EntryForm from './EntryForm';
+import EditableField from './EditableField';
 import Icon from './Icon';
 import Card from './ui/Card';
 import { buttonStyles } from './ui/button';
 
-const EDIT_FIELDS = ['subreddit', 'title', 'description'] as const;
+type Field = keyof EntryEditableFields;
 
-export default function EntryDetails({ entry: initialEntry, projectSlug }: { entry: Entry; projectSlug: string }) {
-  const [entry, setEntry] = useState(initialEntry);
-  const [editing, setEditing] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
+const pick = ({ subreddit, title, description }: EntryEditableFields): EntryEditableFields => ({
+  subreddit,
+  title,
+  description,
+});
+
+const same = (a: EntryEditableFields, b: EntryEditableFields) =>
+  (Object.keys(a) as Field[]).every((k) => a[k].trim() === b[k].trim());
+
+/** Entry fields are edited in place and saved automatically when a field loses focus. */
+export default function EntryDetails({ entry }: { entry: Entry }) {
+  const [values, setValues] = useState(() => pick(entry));
+  const [saved, setSaved] = useState(() => pick(entry));
+  const [status, setStatus] = useState<'idle' | 'saved' | 'error'>('idle');
   const [error, setError] = useState<string | null>(null);
   const [saving, startSave] = useTransition();
-  const [deleting, startDelete] = useTransition();
   const { copied, copy } = useCopy();
 
-  const handleSave = (values: EntryEditableFields) =>
+  const dirty = !same(values, saved);
+
+  const commit = () => {
+    if (!dirty) return;
+    const snapshot = values;
     startSave(async () => {
       try {
         setError(null);
-        setEntry(await updateEntryAction(entry.id, values));
-        setEditing(false);
+        setSaved(pick(await updateEntryAction(entry.id, snapshot)));
+        setStatus('saved');
       } catch (e) {
+        setStatus('error');
         setError(e instanceof Error ? e.message : 'Could not save changes');
       }
     });
+  };
 
-  const handleDelete = () =>
-    startDelete(async () => {
-      await deleteEntryAction(projectSlug, entry.id); // redirects on success
-    });
+  const field = (name: Field) => ({
+    name,
+    value: values[name],
+    onChange: (value: string) => {
+      setValues((v) => ({ ...v, [name]: value }));
+      setStatus('idle');
+    },
+    onCommit: commit,
+  });
 
   return (
     <Card className="p-5">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-base font-semibold">{editing ? 'Edit entry' : 'Entry details'}</h2>
-        {!editing && (
-          <div className="flex w-full gap-2 *:flex-1 sm:w-auto sm:*:flex-none">
-            <button type="button" className={buttonStyles({ variant: 'secondary' })} onClick={() => setEditing(true)}>
-              <Icon name="edit" /> Edit
-            </button>
-            <button
-              type="button"
-              className={buttonStyles({
-                variant: 'secondary',
-                className: cn(copied && 'text-emerald-600 dark:text-emerald-400'),
-              })}
-              onClick={() => copy(formatEntryForCopy(entry))}
-            >
-              <Icon name={copied ? 'check' : 'copy'} /> {copied ? 'Copied!' : 'Copy All'}
-            </button>
-            <button type="button" className={buttonStyles({ variant: 'dangerSoft' })} onClick={() => setConfirmOpen(true)}>
-              <Icon name="trash" /> Delete
-            </button>
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          <h2 className="text-base font-semibold">Entry details</h2>
+          <SaveStatus saving={saving} dirty={dirty} status={status} />
+        </div>
+        <button
+          type="button"
+          className={buttonStyles({
+            variant: 'secondary',
+            className: cn('w-full sm:w-auto', copied && 'text-emerald-600 dark:text-emerald-400'),
+          })}
+          onClick={() => copy(formatEntryForCopy(values))}
+        >
+          <Icon name={copied ? 'check' : 'copy'} /> {copied ? 'Copied!' : 'Copy All'}
+        </button>
       </div>
 
       {error && (
@@ -72,33 +83,28 @@ export default function EntryDetails({ entry: initialEntry, projectSlug }: { ent
         </p>
       )}
 
-      {editing ? (
-        <EntryForm
-          initialValues={entry}
-          fields={EDIT_FIELDS}
-          submitLabel="Save changes"
-          submitting={saving}
-          onSubmit={handleSave}
-          onCancel={() => setEditing(false)}
-        />
-      ) : (
-        <div className="flex flex-col gap-3">
-          <DetailField label="Subreddit" value={entry.subreddit} />
-          <DetailField label="Title" value={entry.title} />
-          <DetailField label="Description" value={entry.description} multiline />
-        </div>
-      )}
-
-      <ConfirmDialog
-        open={confirmOpen}
-        title="Delete this entry?"
-        message={`Post #${entry.postNo} will be removed. This can't be undone.`}
-        confirmLabel="Delete"
-        danger
-        busy={deleting}
-        onConfirm={handleDelete}
-        onCancel={() => setConfirmOpen(false)}
-      />
+      <div className="flex flex-col gap-3">
+        <EditableField label="Subreddit" placeholder="r/…" {...field('subreddit')} />
+        <EditableField label="Title" {...field('title')} />
+        <EditableField label="Description" multiline {...field('description')} />
+      </div>
     </Card>
+  );
+}
+
+function SaveStatus({ saving, dirty, status }: { saving: boolean; dirty: boolean; status: string }) {
+  const [text, className] = saving
+    ? ['Saving…', 'text-gray-500 dark:text-gray-400']
+    : status === 'error'
+      ? ['Not saved', 'text-red-600 dark:text-red-400']
+      : dirty
+        ? ['Unsaved changes', 'text-amber-600 dark:text-amber-400']
+        : status === 'saved'
+          ? ['✓ Saved', 'text-emerald-600 dark:text-emerald-400']
+          : ['Click any field to edit', 'text-gray-400'];
+  return (
+    <span role="status" className={cn('text-xs font-medium', className)}>
+      {text}
+    </span>
   );
 }

@@ -39,7 +39,7 @@ export async function createEntryAction(projectSlug: string, data: EntryInput): 
 
   revalidatePath('/');
   revalidatePath(`/${projectSlug}`);
-  redirect(`/${projectSlug}/${entry.id}`);
+  redirect(`/${projectSlug}/${entry.postNo}`);
 }
 
 export async function updateEntryAction(
@@ -54,15 +54,14 @@ export async function updateEntryAction(
   if (!entry) throw new Error('Entry not found');
 
   revalidatePath(`/${entry.projectSlug}`);
-  revalidatePath(`/${entry.projectSlug}/${entryId}`);
+  revalidatePath(`/${entry.projectSlug}/${entry.postNo}`);
   return entry;
 }
 
 export async function deleteEntryAction(projectSlug: string, entryId: string): Promise<void> {
   await entries.deleteEntry(entryId);
   revalidatePath('/');
-  revalidatePath(`/${projectSlug}`);
-  redirect(`/${projectSlug}`);
+  revalidatePath(`/${projectSlug}`, 'layout');
 }
 
 export interface StatusCheckSummary {
