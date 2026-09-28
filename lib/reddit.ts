@@ -16,6 +16,11 @@ export interface RedditCheckResult {
 
 export class RedditConfigError extends Error {}
 
+/** True when Reddit API credentials are set. The UI hides status checks otherwise. */
+export function isRedditConfigured(): boolean {
+  return Boolean(process.env.REDDIT_CLIENT_ID && process.env.REDDIT_CLIENT_SECRET);
+}
+
 const TOKEN_URL = 'https://www.reddit.com/api/v1/access_token';
 const API_BASE = 'https://oauth.reddit.com';
 const BATCH_SIZE = 100; // /api/info accepts up to 100 ids per call

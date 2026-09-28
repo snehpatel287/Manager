@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/States';
 import { buttonStyles } from '@/components/ui/button';
 import { getEntries } from '@/lib/data/entries';
 import { getProject } from '@/lib/data/projects';
+import { isRedditConfigured } from '@/lib/reddit';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,7 +41,7 @@ export default async function ProjectPage({ params }: Props) {
         backLabel="All projects"
         actions={
           <>
-            {entries.length > 0 && (
+            {entries.length > 0 && isRedditConfigured() && (
               <CheckStatusButton entryIds={entries.map((e) => e.id)} label="Check statuses" />
             )}
             {addButton}

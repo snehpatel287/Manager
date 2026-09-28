@@ -9,6 +9,7 @@ import Card from '@/components/ui/Card';
 import FieldLabel from '@/components/ui/FieldLabel';
 import { getEntryByPostNo } from '@/lib/data/entries';
 import { getProject } from '@/lib/data/projects';
+import { isRedditConfigured } from '@/lib/reddit';
 import { cn } from '@/lib/utils/cn';
 import { formatDate, formatDateTime, formatUsername, shortUrl } from '@/lib/utils/format';
 
@@ -49,13 +50,15 @@ export default async function EntryPage({ params }: Props) {
             <span className="text-gray-400">—</span>
           )}
         </Meta>
-        <div className="flex w-full flex-wrap items-center justify-between gap-3 border-t border-gray-200 pt-4 dark:border-gray-800">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Last checked: <span className="text-gray-900 dark:text-gray-100">{formatDateTime(entry.lastCheckedAt)}</span>
-            {entry.statusReason && <> · {entry.statusReason}</>}
-          </p>
-          <CheckStatusButton entryIds={[entry.id]} size="sm" />
-        </div>
+        {isRedditConfigured() && (
+          <div className="flex w-full flex-wrap items-center justify-between gap-3 border-t border-gray-200 pt-4 dark:border-gray-800">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Last checked: <span className="text-gray-900 dark:text-gray-100">{formatDateTime(entry.lastCheckedAt)}</span>
+              {entry.statusReason && <> · {entry.statusReason}</>}
+            </p>
+            <CheckStatusButton entryIds={[entry.id]} size="sm" />
+          </div>
+        )}
       </Card>
 
       <EntryDetails key={entry.id} entry={entry} />

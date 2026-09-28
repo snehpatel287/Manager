@@ -2,10 +2,15 @@
 // Data survives server restarts (Next dev restarts its server when .env.local
 // or config changes, which would wipe an in-memory store).
 //
+// On Vercel the app folder is read-only, so the file goes in /tmp instead.
+// /tmp is temporary and per-instance there — use a real database (MongoDB)
+// for data that must persist on a hosted deployment.
+//
 // When MongoDB is added, delete this file and replace the functions in
 // projects.ts / entries.ts with Mongoose queries.
 
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 import type { Entry, Project } from '@/lib/types';
 import { entries, projects } from './mockData';
@@ -15,7 +20,11 @@ export interface Store {
   entries: Entry[];
 }
 
-const DB_FILE = path.join(process.cwd(), 'data', 'db.json');
+const DATA_DIR =
+  process.env.DATA_DIR ||
+  (process.env.VERCEL ? path.join(os.tmpdir(), 'manager-data') : path.join(process.cwd(), 'data'));
+
+const DB_FILE = path.join(DATA_DIR, 'db.json');
 
 const seed = (): Store => structuredClone({ projects, entries });
 
