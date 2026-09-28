@@ -9,6 +9,7 @@
 // When MongoDB is added, delete this file and replace the functions in
 // projects.ts / entries.ts with Mongoose queries.
 
+import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -28,29 +29,40 @@ const DB_FILE = path.join(DATA_DIR, 'db.json');
 
 const seed = (): Store => structuredClone({ projects, entries });
 
+// Shared across route bundles: the write queue and the one-time seeding step.
+const g = globalThis as typeof globalThis & {
+  __dbQueue?: Promise<unknown>;
+  __dbSeeding?: Promise<void>;
+};
+
+/** Creates the data file from mockData once, even if many requests arrive together. */
+function ensureSeeded(): Promise<void> {
+  g.__dbSeeding ??= writeDb(seed()).finally(() => {
+    g.__dbSeeding = undefined;
+  });
+  return g.__dbSeeding;
+}
+
 /** Returns a fresh copy of the data; safe to modify. */
 export async function readDb(): Promise<Store> {
   try {
     return JSON.parse(await readFile(DB_FILE, 'utf8')) as Store;
   } catch (e) {
     if ((e as NodeJS.ErrnoException).code !== 'ENOENT') throw e;
-    const initial = seed();
-    await writeDb(initial);
-    return initial;
+    await ensureSeeded();
+    return JSON.parse(await readFile(DB_FILE, 'utf8')) as Store;
   }
 }
 
 async function writeDb(db: Store): Promise<void> {
   await mkdir(path.dirname(DB_FILE), { recursive: true });
   // Write to a temp file then rename, so a crash never leaves a half-written file.
-  const tmp = `${DB_FILE}.${process.pid}.tmp`;
+  const tmp = `${DB_FILE}.${process.pid}.${randomUUID()}.tmp`;
   await writeFile(tmp, JSON.stringify(db, null, 2));
   await rename(tmp, DB_FILE);
 }
 
 // Writes are queued so concurrent actions can't overwrite each other's changes.
-// Kept on globalThis so every route bundle shares one queue.
-const g = globalThis as typeof globalThis & { __dbQueue?: Promise<unknown> };
 
 /** Reads the data, applies `fn`, saves it, and returns `fn`'s result. */
 export function mutate<T>(fn: (db: Store) => T): Promise<T> {
