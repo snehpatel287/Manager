@@ -1,12 +1,12 @@
 'use server';
 
 // Server Actions — the only way the UI mutates data. They call the repository
-// layer, so they keep working unchanged once it is backed by MongoDB.
+// layer (lib/data), which talks to the Express + MongoDB API.
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import * as entries from '@/lib/data/entries';
-import { createProject, getProject } from '@/lib/data/projects';
+import { createProject, deleteProject, getProject, updateProject } from '@/lib/data/projects';
 import { checkRedditPosts, RedditConfigError } from '@/lib/reddit';
 import type { Entry, EntryEditableFields, EntryInput, EntryStatus, ProjectInput } from '@/lib/types';
 
@@ -22,6 +22,23 @@ export async function createProjectAction(data: ProjectInput): Promise<void> {
 
   revalidatePath('/');
   redirect(`/${project.slug}`);
+}
+
+export async function updateProjectAction(projectSlug: string, data: ProjectInput): Promise<void> {
+  const title = clean(data.title);
+  if (!title) throw new Error('Title is required');
+
+  const project = await updateProject(projectSlug, { title, description: clean(data.description) });
+  if (!project) throw new Error('Project not found');
+
+  revalidatePath('/');
+  revalidatePath(`/${projectSlug}`, 'layout');
+}
+
+export async function deleteProjectAction(projectSlug: string): Promise<void> {
+  await deleteProject(projectSlug);
+  revalidatePath('/');
+  redirect('/');
 }
 
 export async function createEntryAction(projectSlug: string, data: EntryInput): Promise<void> {
@@ -47,6 +64,7 @@ export async function updateEntryAction(
   data: EntryEditableFields,
 ): Promise<Entry> {
   const entry = await entries.updateEntry(entryId, {
+    postUrl: clean(data.postUrl),
     subreddit: clean(data.subreddit),
     title: clean(data.title),
     description: clean(data.description),
@@ -55,6 +73,17 @@ export async function updateEntryAction(
 
   revalidatePath(`/${entry.projectSlug}`);
   revalidatePath(`/${entry.projectSlug}/${entry.postNo}`);
+  return entry;
+}
+
+/** Sets an entry's Live / Removed status by hand. */
+export async function updateEntryStatusAction(entryId: string, status: EntryStatus): Promise<Entry> {
+  if (!STATUSES.includes(status)) throw new Error('Invalid status');
+  const entry = await entries.updateEntry(entryId, { status });
+  if (!entry) throw new Error('Entry not found');
+
+  revalidatePath('/');
+  revalidatePath(`/${entry.projectSlug}`, 'layout');
   return entry;
 }
 

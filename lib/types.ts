@@ -1,4 +1,4 @@
-// Shared domain types. These double as the shape of the future Mongoose models.
+// Shared domain types. The API (server/src/models) returns documents in this shape.
 
 export type EntryStatus = 'live' | 'removed';
 
@@ -41,7 +41,7 @@ export interface Entry {
 export type EntryInput = Omit<Entry, 'id' | 'projectSlug' | 'postNo' | 'lastCheckedAt' | 'statusReason'>;
 
 /** Fields editable from the entry details page. */
-export type EntryEditableFields = Pick<Entry, 'subreddit' | 'title' | 'description'>;
+export type EntryEditableFields = Pick<Entry, 'postUrl' | 'subreddit' | 'title' | 'description'>;
 
 /** Fields the user fills in when creating a project (slug is derived from title). */
 export type ProjectInput = Pick<Project, 'title' | 'description'>;

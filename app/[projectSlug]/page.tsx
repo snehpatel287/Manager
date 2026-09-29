@@ -5,6 +5,7 @@ import CheckStatusButton from '@/components/CheckStatusButton';
 import EntriesView from '@/components/EntriesView';
 import Icon from '@/components/Icon';
 import PageHeader from '@/components/PageHeader';
+import ProjectActions from '@/components/ProjectActions';
 import { EmptyState } from '@/components/States';
 import { buttonStyles } from '@/components/ui/button';
 import { getEntries } from '@/lib/data/entries';
@@ -44,6 +45,7 @@ export default async function ProjectPage({ params }: Props) {
             {entries.length > 0 && isRedditConfigured() && (
               <CheckStatusButton entryIds={entries.map((e) => e.id)} label="Check statuses" />
             )}
+            <ProjectActions project={project} />
             {addButton}
           </>
         }

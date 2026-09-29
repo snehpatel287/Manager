@@ -4,8 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:api": "npm --prefix server run dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "start:api": "npm --prefix server start",
+    "seed": "npm --prefix server run seed --"
   },
   "dependencies": {
     "next": "^16.3.6",

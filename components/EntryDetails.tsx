@@ -13,7 +13,8 @@ import { buttonStyles } from './ui/button';
 
 type Field = keyof EntryEditableFields;
 
-const pick = ({ subreddit, title, description }: EntryEditableFields): EntryEditableFields => ({
+const pick = ({ postUrl, subreddit, title, description }: EntryEditableFields): EntryEditableFields => ({
+  postUrl,
   subreddit,
   title,
   description,
@@ -84,6 +85,7 @@ export default function EntryDetails({ entry }: { entry: Entry }) {
       )}
 
       <div className="flex flex-col gap-3">
+        <EditableField label="Post URL" placeholder="https://reddit.com/r/…" {...field('postUrl')} />
         <EditableField label="Subreddit" placeholder="r/…" {...field('subreddit')} />
         <EditableField label="Title" {...field('title')} />
         <EditableField label="Description" multiline {...field('description')} />

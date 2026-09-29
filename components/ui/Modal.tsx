@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 
 interface ModalProps {
   open: boolean;
@@ -10,7 +11,10 @@ interface ModalProps {
   children: ReactNode;
 }
 
-/** Backdrop + centered panel. Closes on Escape or backdrop click. */
+/**
+ * Backdrop + centered panel. Closes on Escape or backdrop click. Rendered into
+ * <body> so a transformed ancestor (e.g. a hovered card) can't clip it.
+ */
 export default function Modal({ open, onClose, labelledBy, role = 'dialog', children }: ModalProps) {
   useEffect(() => {
     if (!open) return;
@@ -21,7 +25,7 @@ export default function Modal({ open, onClose, labelledBy, role = 'dialog', chil
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 grid animate-[fade_.12s_ease-out] place-items-center bg-gray-950/45 p-4"
       onClick={onClose}
@@ -35,6 +39,7 @@ export default function Modal({ open, onClose, labelledBy, role = 'dialog', chil
       >
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
