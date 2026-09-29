@@ -95,10 +95,12 @@ Data flow: **pages / Server Actions → `lib/data/*` repositories → Express AP
 
 `npm run seed -- --reset` replaces everything with `data/db.json` (or the sample data if that file is gone).
 
-## Deploying
+## Deploying (Vercel)
 
-Deploy the two parts separately:
+The app and the API are two Vercel projects made from the same GitHub repo:
 
-1. **Database:** create a MongoDB Atlas cluster and copy its connection string.
-2. **API:** deploy `server/` to any Node host (Render, Railway, Fly.io, …) with start command `npm start` and the variables `MONGODB_URI`, `API_KEY` (and `PORT` if the host doesn't set it).
-3. **App:** on Vercel, set `API_URL` (the API's public URL) and the same `API_KEY`.
+1. **API:** in Vercel, **Add New → Project**, pick this repo, set **Root Directory** to `server`, and add the environment variable `MONGODB_URI`. After it deploys, open `https://<api-project>.vercel.app/health`. It should show `{"ok":true}`.
+2. **App:** in the existing project, add `API_URL` = the API project's URL (no trailing `/`), then redeploy.
+3. **Atlas:** under **Network Access**, allow `0.0.0.0/0`. Vercel has no fixed IP addresses.
+
+To lock the API down, set the same random `API_KEY` in both projects.
