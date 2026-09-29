@@ -10,7 +10,9 @@ export function connectDb(): Promise<typeof mongoose> {
   g.__mongoose ??= (async () => {
     const uri = process.env.MONGODB_URI;
     if (!uri) throw new Error('MONGODB_URI is not set. Add it to .env.local (see README).');
-    await mongoose.connect(uri);
+    // Fail after 10s instead of 30s when the database can't be reached
+    // (e.g. Atlas Network Access doesn't allow this server's IP).
+    await mongoose.connect(uri, { serverSelectionTimeoutMS: 10_000 });
     // Builds the unique indexes (slug, projectSlug + postNo) if they're missing.
     await mongoose.syncIndexes();
     return mongoose;
