@@ -1,4 +1,4 @@
-// Shared domain types. The API (server/src/models) returns documents in this shape.
+// Shared domain types. lib/data maps MongoDB documents (lib/db/models.ts) to these.
 
 export type EntryStatus = 'live' | 'removed';
 

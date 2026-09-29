@@ -1,7 +1,7 @@
 'use server';
 
 // Server Actions — the only way the UI mutates data. They call the repository
-// layer (lib/data), which talks to the Express + MongoDB API.
+// layer (lib/data), which reads and writes MongoDB.
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';

@@ -4,13 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "dev:api": "npm --prefix server run dev",
     "build": "next build",
     "start": "next start",
-    "start:api": "npm --prefix server start",
-    "seed": "npm --prefix server run seed --"
+    "seed": "node --env-file-if-exists=.env.local scripts/seed.mjs"
   },
   "dependencies": {
+    "mongoose": "^9.10.2",
     "next": "^16.3.6",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
