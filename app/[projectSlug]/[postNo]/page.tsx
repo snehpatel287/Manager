@@ -4,7 +4,7 @@ import CheckStatusButton from '@/components/CheckStatusButton';
 import EntryDetails from '@/components/EntryDetails';
 import Icon from '@/components/Icon';
 import PageHeader from '@/components/PageHeader';
-import StatusBadge from '@/components/StatusBadge';
+import StatusSwitch from '@/components/StatusSwitch';
 import Card from '@/components/ui/Card';
 import FieldLabel from '@/components/ui/FieldLabel';
 import { getEntryByPostNo } from '@/lib/data/entries';
@@ -32,7 +32,7 @@ export default async function EntryPage({ params }: Props) {
 
       <Card className="mb-4 flex flex-wrap gap-x-8 gap-y-4 px-5 py-4">
         <Meta label="Status">
-          <StatusBadge status={entry.status} reason={entry.statusReason} />
+          <StatusSwitch key={entry.status} entryId={entry.id} status={entry.status} reason={entry.statusReason} />
         </Meta>
         <Meta label="Username">{formatUsername(entry.redditUsername)}</Meta>
         <Meta label="Date">{formatDate(entry.date)}</Meta>

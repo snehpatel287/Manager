@@ -1,11 +1,12 @@
 node_modules
 .next
 out
+.env
 .env*.local
 .DS_Store
 !.env.example
 *.tsbuildinfo
 next-env.d.ts
 
-# Local data file (personal data, created on first run)
+# Old JSON-file data (pre-MongoDB); import it with `npm run seed`
 /data/

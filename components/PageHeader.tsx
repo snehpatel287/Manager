@@ -26,7 +26,7 @@ export default function PageHeader({ title, description, backHref, backLabel, ac
           <h1 className="text-[22px] font-semibold tracking-tight sm:text-[26px]">{title}</h1>
           {description && <p className="mt-1 text-gray-500 dark:text-gray-400">{description}</p>}
         </div>
-        {actions && <div className="flex w-full gap-2 *:flex-1 sm:w-auto sm:*:flex-none">{actions}</div>}
+        {actions && <div className="flex w-full flex-wrap gap-2 *:flex-1 sm:w-auto sm:*:flex-none">{actions}</div>}
       </div>
     </div>
   );
